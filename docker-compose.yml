@@ -1,0 +1,31 @@
+version: '3'
+
+services:
+  postgres:
+    image: postgres:alpine
+    restart: "always"
+    environment:
+      POSTGRES_PASSWORD: "Postgres2019!"
+      POSTGRES_USER: "processor"
+    ports:
+      - "15432:5432"
+    volumes:
+      - /home/ronaldo/typescript-projects/processor/datapg:/var/lib/postgresql/data 
+    networks:
+      - postgres-compose-network
+      
+  pgadmin:
+    image: dpage/pgadmin4
+    environment:
+      PGADMIN_DEFAULT_EMAIL: "ronafreitasweb@gmail.com"
+      PGADMIN_DEFAULT_PASSWORD: "PgAdmin2019!"
+    ports:
+      - "16543:80"
+    depends_on:
+      - postgres
+    networks:
+      - postgres-compose-network
+
+networks: 
+  postgres-compose-network:
+    driver: bridge
