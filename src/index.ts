@@ -17,6 +17,8 @@ import Patient from './models/Patient';
 
 (async () => {
 
+    const connPostgres = await createConnection(typeOrmConfig);
+
     // 1 - cria tabela 'stats', SE NÃO EXISTIR
     // 2 - recebe dados via consumer
     // 3 - pega dados da tabela 'stats', SE EXISTIR
@@ -32,7 +34,7 @@ import Patient from './models/Patient';
         await ch.prefetch(5)
     }
 
-    const statsConsumer = new StatsController(connection, prepareConsumer)
+    const statsConsumer = new StatsController(connPostgres, connection, prepareConsumer)
     //const statsConsumer = new ConsumerAmqp(connection, prepareConsumer)
     await statsConsumer.consume('stats-consumer-pre', {})
     console.log("Started consuming 'stats-consumer-pre'")

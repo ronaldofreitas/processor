@@ -1,6 +1,6 @@
 // Config that is common to more than one part of the app.
 import * as dotenv from 'dotenv'
-import Stats from 'src/models/Stats';
+import Stats from 'src/entity/Stats';
 import { PostgresConnectionOptions } from 'typeorm/driver/postgres/PostgresConnectionOptions';
 dotenv.config();
 
