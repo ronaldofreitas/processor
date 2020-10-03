@@ -5,9 +5,9 @@ import { createConnection } from 'typeorm';
 import { typeOrmConfig } from './config/type-orm';
 import { Connection } from 'amqplib-plus'
 import { Channel } from 'amqplib'
-import Stats from './models/Stats';
-import { ConsumerAmqp } from './services/amqp/ConsumerAmqp';
+//import Stats from './models/Stats';
 import { optionsAmqp } from './config/amqp-config';
+import { StatsController } from './controller/StatsController';
 
 /*
 import Appointment from './models/Appointment';
@@ -28,13 +28,14 @@ import Patient from './models/Patient';
     await connection.connect()
 
     const prepareConsumer = async (ch: Channel) => {
-        await ch.assertQueue('target-queue', { durable: false })
+        await ch.assertQueue('stats-consumer-pre', { durable: false })
         await ch.prefetch(5)
     }
 
-    const customConsumer = new ConsumerAmqp(connection, prepareConsumer)
-    await customConsumer.consume('target-queue', {})
-    console.log("Started consuming 'target-queue'")
+    const statsConsumer = new StatsController(connection, prepareConsumer)
+    //const statsConsumer = new ConsumerAmqp(connection, prepareConsumer)
+    await statsConsumer.consume('stats-consumer-pre', {})
+    console.log("Started consuming 'stats-consumer-pre'")
 
     /*
     const conn = await createConnection(typeOrmConfig);
