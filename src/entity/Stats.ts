@@ -7,7 +7,7 @@ export default class Stats {
     id: number;
 
     @Column()
-    mensagem: string;
+    mensagem: string
 
 }
 

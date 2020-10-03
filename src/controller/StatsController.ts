@@ -1,6 +1,6 @@
 import { Message, Channel } from "amqplib";
-import { Connection, Consumer, createChannelCallback, Publisher } from "amqplib-plus";
-import Stats from "src/entity/Stats";
+import { Connection, Consumer, createChannelCallback } from "amqplib-plus";
+import Stats from "../entity/Stats";
 import { Connection as ConnTypeORM, Repository } from "typeorm";
 
 export class StatsController extends Consumer {
@@ -25,12 +25,17 @@ export class StatsController extends Consumer {
             // return channel.nack(msg)
         }
 
+        const getItems = await this.statsRepo.find({})
         const mensagem_parse = JSON.parse(msg.content.toString())
-        const resultProccess = 'TAMANHO:  '+msg.content.toString().length + " dt é igual a = "+mensagem_parse.dt
-
+        const resultProccess = '{total:  '+getItems.reverse()[0].id + ",  metodo: "+mensagem_parse.me+"}"
         this.statsEntity.mensagem = resultProccess
-        await this.statsRepo.save(this.statsEntity)
 
+        /*
+        console.log('------------------------------------')
+        console.log(getItems.reverse()[0].id)
+        console.log(getItems[0].mensagem)
+        console.log('------------------------------------')
+        */
         if (msg.properties.replyTo) {
             channel.sendToQueue(msg.properties.replyTo, Buffer.from(resultProccess), {
                 correlationId: msg.properties.correlationId,
@@ -41,6 +46,8 @@ export class StatsController extends Consumer {
         } else {
             channel.ack(msg)
         }
+
+        await this.statsRepo.save(this.statsEntity)
     }
 
 }
