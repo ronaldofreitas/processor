@@ -1,0 +1,89 @@
+{
+  dt: 2020-10-03T14:24:17.497Z,
+  tm: 1601735057497,
+  ep: '/usuario',
+  me: 'GET',
+  sc: '200',
+  lt: '0.02'
+}
+  ep: '/usuario',
+  me: 'POST',
+  sc: 200,
+  lt: 0.091,
+  tm: 1601736417000,
+
+{"id_usuario":
+    [
+        {"total_requests":5000},
+        {"2020-10-25": 
+            [
+                {"14":
+                    [
+                        {
+                        "endpoints": 
+                            [
+                                {"/usuario": 
+                                    [
+                                        {
+                                            "status": 200, 
+                                            "metodo": "POST",
+                                            "total_requests": 73,
+                                            "latencia_media": "0.54"
+                                        },
+                                        {
+                                            "status": 200, 
+                                            "metodo": "GET",
+                                            "total_requests": 245,
+                                            "latencia_media": "0.54"
+                                        },
+                                        {
+                                            "status": 500, 
+                                            "metodo": "POST",
+                                            "total_requests": 1,
+                                            "latencia_media": "0.54"
+                                        }
+                                    ]
+                                },
+                                {"/": 
+                                    [
+                                        {
+                                            "status": 200, 
+                                            "metodo": "GET",
+                                            "total_requests": 445,
+                                            "latencia_media": "0.54"
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                    ],
+                    "total_requests": 245, 
+                },
+                {"17":
+                    [
+                        {}
+                    ],
+                    "total_requests": 245, 
+                },
+            ],
+            "total_requests": 245
+        },
+        
+    ]
+}
+
+
+    (2020102514 = 2020-10-25, 14 horas)
+
+
+1) pega tudo atual
+2) faz os cálculos
+3) devolve ACK
+4) atualiza banco
+x) faz parte do cálculo lá na própria API
+
+
+- latência média 
+- total por status code
+- total por endpoint
+- total por período

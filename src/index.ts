@@ -1,16 +1,15 @@
-// Must be at top
-import 'reflect-metadata';
-import { createConnection } from 'typeorm';
-import { typeOrmConfig } from './config/type-orm';
 import { Connection } from 'amqplib-plus'
 import { Channel } from 'amqplib'
-import { optionsAmqp } from './config/amqp-config';
-import { StatsController } from './controller/StatsController';
+//import { optionsAmqp } from './config/amqp-config';
+import { StatsConsumer } from './consumer/StatsController';
+import * as database from './database';
 
 (async () => {
-    const run = async () => {
-        const connPostgres = await createConnection(typeOrmConfig);
-        const connection = new Connection(optionsAmqp, console)
+    try {
+        await database.connect();
+
+        const connection = new Connection({ connectionString: 'amqps://feadhfit:XMb8d1vGS5_jhrPjm4jlRmW7Te8CnYwr@crane.rmq.cloudamqp.com/feadhfit' }, console)
+        //const connection = new Connection(optionsAmqp, console)
         await connection.connect()
     
         const prepareConsumer = async (ch: Channel) => {
@@ -18,13 +17,9 @@ import { StatsController } from './controller/StatsController';
             await ch.prefetch(5)
         }
     
-        const statsConsumer = new StatsController(connPostgres, connection, prepareConsumer)
+        const statsConsumer = new StatsConsumer(connection, prepareConsumer)
+        //const statsConsumer = new StatsConsumer(dbConn, connection, prepareConsumer)
         await statsConsumer.consume('stats-consumer-pre', {})
-        //await connPostgres.close();
-    }
-
-    try {
-        run()
     } catch (error) {
         console.log(error)
     } 
