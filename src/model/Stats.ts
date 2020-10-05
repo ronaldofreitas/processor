@@ -19,16 +19,5 @@ const StatsSchema = new Schema(
   }
 );
 
-/*
-StatsSchema.pre('findOneAndUpdate', function (next) {
-  console.log('------------->>>>>> findOneAndUpdate: ');
-  const docToUpdate = Stats.findOne(this.getFilter());
-  this._update.$set.objects = [];
-  this._update.$set.people = [];
-  this._update.$set.events =  [];
-  next();
-});
-*/
-
 export interface StatsModel extends Omit<IStats, '_id'>, Document {}
 export const Stats: Model<StatsModel> = mongoose.model('Stats', StatsSchema);

@@ -1,8 +1,7 @@
-import { Message, Channel } from "amqplib";
-import { Connection, Consumer, createChannelCallback, Publisher } from "amqplib-plus";
-import { Stats, StatsModel } from "../model/Stats";
-import { Types } from 'mongoose';
-import { AmqpPublisher } from "../services/amqp-publisher";
+import { Channel } from "amqplib"
+import { Connection, Publisher } from "amqplib-plus"
+import { Stats, StatsModel } from "../model/Stats"
+import { Types } from 'mongoose'
 
 interface ProducerMessage {
     ui: string;
@@ -23,7 +22,7 @@ export class StatsController {
     constructor (amqpConn: Connection) {
         this.statsModel = new Stats()
         this.statsModelFind = Stats
-        this.publisher = new AmqpPublisher(amqpConn, this.preparePublisher)
+        this.publisher = new Publisher(amqpConn, this.preparePublisher)
     }
 
     async preparePublisher (ch: Channel) {
@@ -37,11 +36,13 @@ export class StatsController {
     async proMsg(dataMessage: string): Promise<void> {
 
         const dataParse: ProducerMessage = JSON.parse(dataMessage)
-
+        
+        /*
         const msgRetorno = {
             updateAt: new Date(),
             mensagem: `endpoint '${dataParse.ep}' acessado via '${dataParse.me}' com status '${dataParse.sc}'`
         }
+        */
 
         await this.statsModelFind.findOne({ep: dataParse.ep, me: dataParse.me, sc: dataParse.sc}, async (err, result) => {
             if (err) throw err
