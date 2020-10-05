@@ -17,6 +17,7 @@
     "amqplib-plus": "^1.0.3",
     "dotenv": "^8.2.0",
     "fast-json-parser": "^1.0.4",
+    "fast-json-stable-stringify": "^2.1.0",
     "kafka-node": "^5.0.0",
     "mongoose": "^5.10.7",
     "winston": "^3.3.3"

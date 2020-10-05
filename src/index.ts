@@ -1,6 +1,5 @@
 import * as database from './database'
 import { KafkaService } from './services/kafka-service'
-import { Parser } from "fast-json-parser"
 import { StatsController } from './controller/Stats'
 import { AmqpService } from './services/amqp-service'
 import logger from './util/logger'
@@ -45,6 +44,7 @@ interface ProxyMessageNginx {
                     logger.error('[CONSUMER_KAFKA_ERROR]', e)
                 })
                 ksumer.on('message', async (message) => {
+                    /*
                     const 
                         bodyMessage: string | Buffer = message.value,
                         mensagem: ProxyMessageNginx = Parser.parse(bodyMessage.toString());
@@ -55,9 +55,11 @@ interface ProxyMessageNginx {
                         me = mensagem.method,
                         sc = mensagem.status,
                         lt = mensagem.request_time;
-                
-                    const dataMessage = JSON.stringify({ep, me, sc, lt, tm})
-                    await statsConsumer.proMsg(dataMessage)
+                    const dataMessage = {ep, me, sc, lt, tm};
+                    console.log(dataMessage)
+                    await statsConsumer.proMsg(JSON.stringify(dataMessage))
+                    */
+                    await statsConsumer.proMsg(message.value.toString())
                 })
             }).catch(logger.error)
         })
