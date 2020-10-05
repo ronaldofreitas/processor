@@ -35,12 +35,12 @@ interface ProducerMessage {
 export class StatsController {
 
     private statsModel: StatsModel
-    private statsModelFind: typeof Stats
+    //private statsModelFind: typeof Stats
     private publisher: Publisher
 
     constructor (amqpConn: Connection) {
         this.statsModel = new Stats()
-        this.statsModelFind = Stats
+        //this.statsModelFind = Stats
         this.publisher = new Publisher(amqpConn, this.preparePublisher)
     }
 
@@ -58,8 +58,8 @@ export class StatsController {
         const metodo_p = dataParse.method
         const status_p = dataParse.status
         const latencia_p = dataParse.request_time
-        
-        await this.statsModelFind.findOne({ep: endpoint_p, me: metodo_p, sc: status_p}, async (err, result) => {
+
+        await Stats.findOne({ep: endpoint_p, me: metodo_p, sc: status_p}, async (err, result) => {
             if (err) throw err
 
             if (!result) {
@@ -87,7 +87,7 @@ export class StatsController {
                     },
                     $inc: { rt: 1 }
                 };
-                let doc = await this.statsModelFind.findOneAndUpdate(filter, update);
+                let doc = await Stats.findOneAndUpdate(filter, update);
                 if (doc) {
                     console.log(' =>>> ', doc)
                     const resultProccess = {ep: doc.ep, me: doc.me, sc: doc.sc, lt: doc.lt, rt: doc.rt};
