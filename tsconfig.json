@@ -11,6 +11,7 @@
         "rootDir": "src",
         "emitDecoratorMetadata": true,
         "experimentalDecorators": true,
+        "skipLibCheck": true,
         "lib": [
             "ES2015",
             "DOM"

@@ -11,13 +11,13 @@
   },
   "dependencies": {
     "@types/amqplib": "^0.5.13",
-    "@types/redis": "^2.8.27",
+    "@types/kafka-node": "^3.0.0",
     "amqplib": "^0.6.0",
     "amqplib-plus": "^1.0.3",
     "dotenv": "^8.2.0",
     "fast-json-parser": "^1.0.4",
-    "mongoose": "^5.10.7",
-    "redis": "^3.0.2"
+    "kafka-node": "^5.0.0",
+    "mongoose": "^5.10.7"
   },
   "scripts": {
     "build": "tsc",
