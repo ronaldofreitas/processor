@@ -7,7 +7,6 @@ const
   db_host = 'cluster0.8bvv8.gcp.mongodb.net',
   mongoUri = `mongodb+srv://${db_user}:${db_pass}@${db_host}/${db_name}?retryWrites=true&w=majority`;
 
-//const mongoUri = 'mongodb+srv://processor:ht8caf9UofmSTKNt@cluster0.8bvv8.gcp.mongodb.net/pipe2be?retryWrites=true&w=majority'
 //const mongoUri = 'mongodb://localhost:27017'
 export const connect = async (): Promise<Mongoose> =>
   await mongoose.connect(mongoUri, {

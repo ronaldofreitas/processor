@@ -1,8 +1,8 @@
-import { Channel } from "amqplib"
-import { Connection, Publisher } from "amqplib-plus"
-import { Stats, StatsModel } from "../model/Stats"
+import { Channel } from 'amqplib'
+import { Connection, Publisher } from 'amqplib-plus'
+import { Stats, StatsModel } from '../model/Stats'
 import { Types } from 'mongoose'
-import { Parser } from "fast-json-parser"
+import { Parser } from 'fast-json-parser'
 import stringify from 'fast-json-stable-stringify'
 
 // ui: string;
@@ -18,37 +18,32 @@ interface ProducerMessage {
     msec: string;
     request_time: string;
 }
-/*
-{
-  date: '2020-10-05T16:15:47+00:00',
-  remote_addr: '172.17.0.1',
-  server_protocol: 'HTTP/1.1',
-  request: 'GET / HTTP/1.1',
-  uri: '/',
-  method: 'GET',
-  status: '200',
-  upstream_response_time: '0.304',
-  msec: '1601914547.040',
-  request_time: '0.302'
-}
-*/
+
 export class StatsController {
 
     private statsModel: StatsModel
-    //private statsModelFind: typeof Stats
     private publisher: Publisher
+    private queueName: string
+    private queueDestinationName: string
+    private exchangeName: string
 
-    constructor (amqpConn: Connection) {
+    constructor (
+        private amqpConn: Connection, 
+        private amqpExchangeName: string,
+        private amqpQueueName: string, 
+        private queueDestinationOutput: string
+    ) {
         this.statsModel = new Stats()
-        //this.statsModelFind = Stats
-        this.publisher = new Publisher(amqpConn, this.preparePublisher)
+        this.publisher = new Publisher(this.amqpConn, this.preparePublisher)
+        this.queueName = this.amqpQueueName
+        this.exchangeName = this.amqpExchangeName
+        this.queueDestinationName = this.queueDestinationOutput
     }
 
     async preparePublisher (ch: Channel) {
-        //await ch.assertQueue('stats-consumer-pre', { durable: false,  exclusive: true...deadLetterExchange })
-        await ch.assertQueue('pos-stats-consumer', { durable: false })
-        //await ch.assertExchange('target-exchange', 'direct')
-        //await ch.bindQueue('pos-stats-consumer', 'target-exchange', 'routKey')
+        await ch.assertQueue(this.queueName, { durable: false })
+        //await ch.assertExchange(this.exchangeName, 'direct')
+        //await ch.bindQueue(this.queueName, 'target-exchange', 'routKey')
         console.log('AmqpPublisher ready')
     }
     
@@ -71,7 +66,7 @@ export class StatsController {
                 this.statsModel.rt = 1
                 await this.statsModel.save().then(async () => {
                     const resultProccess = {ep: endpoint_p, me: metodo_p, sc: status_p, lt: latencia_p, rt: 1};
-                    await this.publisher.sendToQueue('pos-stats-consumer', Buffer.from(stringify(resultProccess)), {})
+                    await this.publisher.sendToQueue(this.queueDestinationName, Buffer.from(stringify(resultProccess)), {})
                 })
             } else {
                 const newLtc = Math.round(result.lt * 100 ) / 100 + parseFloat(latencia_p)
@@ -91,11 +86,12 @@ export class StatsController {
                 if (doc) {
                     console.log(' =>>> ', doc)
                     const resultProccess = {ep: doc.ep, me: doc.me, sc: doc.sc, lt: doc.lt, rt: doc.rt};
-                    await this.publisher.sendToQueue('pos-stats-consumer', Buffer.from(stringify(resultProccess)), {})
+                    await this.publisher.sendToQueue(this.queueDestinationName, Buffer.from(stringify(resultProccess)), {})
                 } else {
                     console.log(' doc.ep nao encontrado ', doc)
                 }
             }
         })
+        //}).lean()
     }
 }

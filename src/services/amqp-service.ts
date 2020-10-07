@@ -9,6 +9,6 @@ export class AmqpService extends Connection {
 
     public async conn(): Promise<Connection> {
         const c = this.connect()
-        return c.then().catch(e => e)
+        return c.then(co => {return co}).catch(e => {return e})
     }
 }
