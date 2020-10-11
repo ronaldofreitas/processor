@@ -7,6 +7,7 @@ interface IStats {
   sc: string;// status code
   lt: number;// latency
   rt: number;// total requests
+  dt: string;
 }
 
 const StatsSchema = new Schema(
@@ -15,7 +16,8 @@ const StatsSchema = new Schema(
     me: { type: String, required: true },
     sc: { type: String, required: true },
     lt: { type: Number, required: true },
-    rt: { type: Number, required: true }
+    rt: { type: Number, required: true },
+    dt: { type: String, required: true },
   }
 );
 

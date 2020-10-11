@@ -5,6 +5,14 @@ import { Types } from 'mongoose'
 import { Parser } from 'fast-json-parser'
 import stringify from 'fast-json-stable-stringify'
 
+export interface configInit {
+    kafkaTopicName: string;
+    rabbitExchangeName: string;
+    rabbitQueueOutputName: string;
+    rabbitRoutKeyName: string;
+}
+
+
 // ui: string;
 interface ProducerMessage {
     date: Date;
@@ -22,76 +30,79 @@ interface ProducerMessage {
 export class StatsController {
 
     private statsModel: StatsModel
-    private publisher: Publisher
-    private queueName: string
-    private queueDestinationName: string
-    private exchangeName: string
 
-    constructor (
-        private amqpConn: Connection, 
-        private amqpExchangeName: string,
-        private amqpQueueName: string, 
-        private queueDestinationOutput: string
-    ) {
+    constructor (private publis: Publisher) {
         this.statsModel = new Stats()
-        this.publisher = new Publisher(this.amqpConn, this.preparePublisher)
-        this.queueName = this.amqpQueueName
-        this.exchangeName = this.amqpExchangeName
-        this.queueDestinationName = this.queueDestinationOutput
-    }
-
-    async preparePublisher (ch: Channel) {
-        await ch.assertQueue(this.queueName, { durable: false })
-        //await ch.assertExchange(this.exchangeName, 'direct')
-        //await ch.bindQueue(this.queueName, 'target-exchange', 'routKey')
-        console.log('AmqpPublisher ready')
+        //this.publisher = new Publisher(this.amqpConn, this.preparePublisher)
     }
     
-    async proMsg(dataMessage: string): Promise<void> {
+    async proMsg(dataMessage: string, iniConf: configInit): Promise<void> {
         const dataParse: ProducerMessage = Parser.parse(dataMessage)
+
+        const fulldate = new Date(dataParse.date)
+        /*
+        console.log(fulldate.getDate())
+        console.log(fulldate.getFullYear())
+        console.log(fulldate.getMonth())
+        console.log(fulldate.getDay())
+        console.log(fulldate.getUTCDate())
+        console.log(fulldate.getHours())
+        console.log(fulldate.getMinutes())
+        */
+        
+        //const dataProd = fulldate.getFullYear()+'-'+fulldate.getMonth()+'-'+fulldate.getDate()+'-'+fulldate.getHours()+'-'+fulldate.getMinutes()
+        const dataProd = fulldate.getFullYear()+''+fulldate.getMonth()+''+fulldate.getDate()+''+fulldate.getHours()
+        //console.log(dataProd)// 2020-9-11-12-21
+
         const endpoint_p = dataParse.uri
         const metodo_p = dataParse.method
         const status_p = dataParse.status
         const latencia_p = dataParse.request_time
 
-        await Stats.findOne({ep: endpoint_p, me: metodo_p, sc: status_p}, async (err, result) => {
+        await Stats.findOne({dt: dataProd, ep: endpoint_p, me: metodo_p, sc: status_p}, async (err, result) => {
             if (err) throw err
 
             if (!result) {
-                console.log('CRIOU','\n')
+                console.log('criou', result)
                 this.statsModel.ep = endpoint_p
                 this.statsModel.me = metodo_p
                 this.statsModel.sc = status_p
                 this.statsModel.lt = parseFloat(latencia_p)
                 this.statsModel.rt = 1
+                this.statsModel.dt = dataProd
                 await this.statsModel.save().then(async () => {
-                    const resultProccess = {ep: endpoint_p, me: metodo_p, sc: status_p, lt: latencia_p, rt: 1};
-                    await this.publisher.sendToQueue(this.queueDestinationName, Buffer.from(stringify(resultProccess)), {})
+                    const resultProccess = {dt: dataProd, ep: endpoint_p, me: metodo_p, sc: status_p, lt: latencia_p, rt: 1}
+                    await this.publis.sendToQueue(iniConf.rabbitQueueOutputName, Buffer.from(stringify(resultProccess)), {})
                 })
             } else {
-                const newLtc = Math.round(result.lt * 100 ) / 100 + parseFloat(latencia_p)
-                const latMed = newLtc / 2 
-                const latmefi = Math.round(latMed * 100 ) / 100
-                const filter = {_id: Types.ObjectId(result._id)};
+                //const newLtc  = Math.round(result.lt * 100 ) / 100 + parseFloat(latencia_p)
+                const newLtc  = (result.lt * 100 ) / 100 + parseFloat(latencia_p)
+                const latMed  = newLtc / 2 
+                //const latmefi = Math.round(latMed * 100 ) / 100
+                const latmefi = ( latMed * 100 ) / 100
+                const filter  = {_id: Types.ObjectId(result._id)};
                 const update = {
                     $set: {
                         ep: endpoint_p, 
                         me: metodo_p, 
                         sc: status_p,
                         lt: latmefi,
+                        dt: dataProd
                     },
                     $inc: { rt: 1 }
                 };
-                let doc = await Stats.findOneAndUpdate(filter, update);
+                let doc = await Stats.findOneAndUpdate(filter, update)
                 if (doc) {
                     console.log(' =>>> ', doc)
-                    const resultProccess = {ep: doc.ep, me: doc.me, sc: doc.sc, lt: doc.lt, rt: doc.rt};
-                    await this.publisher.sendToQueue(this.queueDestinationName, Buffer.from(stringify(resultProccess)), {})
+                    const resultProccess = {dt: dataProd, ep: doc.ep, me: doc.me, sc: doc.sc, lt: doc.lt, rt: doc.rt}
+                    await this.publis.sendToQueue(iniConf.rabbitQueueOutputName, Buffer.from(stringify(resultProccess)), {})
+                    //await this.publis.publish(iniConf.rabbitExchangeName, iniConf.rabbitRoutKeyName, Buffer.from(stringify(resultProccess)), {});
                 } else {
                     console.log(' doc.ep nao encontrado ', doc)
                 }
             }
         })
+
         //}).lean()
     }
 }

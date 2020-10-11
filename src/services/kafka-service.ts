@@ -16,23 +16,7 @@ export class KafkaService {
             connectRetryOptions: operation
         });
     }
-    /*
-    public async initClient(): Promise<KafkaClient> {
-        const operation = {
-            retries: 2,
-            //factor: 1,
-            minTimeout: 1 * 1,
-            maxTimeout: 1 * 1,
-            randomize: true,
-        };
-        return new KafkaClient({
-            kafkaHost: '172.17.0.3:9092', 
-            autoConnect: true, 
-            connectRetryOptions: operation
-        });
-    }
 
-    */
     public async Ksumer(
         client: KafkaClient, topic: string
     ): Promise<Consumer> {
@@ -48,7 +32,7 @@ export class KafkaService {
         })
     }
 
-    public async ksender(
+    public async Ksender(
         client: KafkaClient
     ): Promise<Producer> {
         return new Producer(client)

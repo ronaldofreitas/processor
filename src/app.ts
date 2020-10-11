@@ -1,15 +1,11 @@
 import * as database from './config/database-config'
 import { KafkaService } from './services/kafka-service'
-import { StatsController } from './controller/Stats'
+import { configInit, StatsController } from './controller/Stats'
 import { AmqpService } from './services/amqp-service'
 import { Logger } from 'winston'
-
-interface configInit {
-    kafkaTopicName: string;
-    rabbitExchangeName: string;
-    thisQueueProcessorName: string;
-    rabbitQueueOutputName: string;
-}
+import { Connection, Publisher } from 'amqplib-plus'
+import { Channel } from 'amqplib'
+import { optionsAmqp } from './config/amqp-config'
 
 export class Application {
     private kafkaInstance: KafkaService
@@ -35,49 +31,61 @@ export class Application {
         this.kafkaInstance = new KafkaService()
     }
 
-    private async initAmqp(): Promise<void> {
-        this.amqpInstance = new AmqpService(this.logger)
-    }
-
     private async startUp(iniConf: configInit): Promise<void> {
+
         await this.initKafka()
         const kClient = await this.kafkaInstance.initClient()
         kClient.on('ready', async () => {
-            this.logger.debug('[KAFKA_CONNECT_SUCCESS]')
-            await this.initAmqp()
-            await this.amqpInstance.connect().then(async (c) => {
-                c.on("close", (err) => { this.logger.debug('[AMQP_CLOSE]', err) });
-                c.on("error", (err) => { this.logger.debug('[AMQP_ERROR]', err) });
-                this.logger.debug('[AMQP_CONNECT_SUCCESS]')
-                await this.initDatabase()
-                const amqpConn = await this.amqpInstance.conn();
-                const statsConsumer = new StatsController(amqpConn, iniConf.rabbitExchangeName, iniConf.thisQueueProcessorName, iniConf.rabbitQueueOutputName);
-                const topico = iniConf.kafkaTopicName
-                const ksumer = await this.kafkaInstance.Ksumer(kClient, topico);
-                ksumer.on('message', async (message) => {
-                    await statsConsumer.proMsg(message.value.toString())
-                })
-                ksumer.on('error', (e: Error) => {
-                    this.logger.error('[ON_CONSUMER_KAFKA_ERROR]', e)
-                })
-                ksumer.once('error', (e: Error) => {
-                    this.logger.error('[ONCE_CONSUMER_KAFKA_ERROR]', e)
-                    if (e.name === 'TopicsNotExistError') {
-                        const topicsToCreate = [{
-                            topic: topico,
-                            partitions: 1,
-                            replicationFactor: 1
-                        }];
-                        kClient.createTopics(topicsToCreate, async (err, result) => {
-                            if (err) throw err
 
-                            await database.close()
-                            await this.amqpInstance.close()
-                            this.startUp(iniConf)
-                        })
-                    }
-                })
-            }).catch(this.logger.error)
+            this.logger.debug('[KAFKA_CONNECT_SUCCESS]')
+
+            const connection = new Connection(optionsAmqp)
+            connection.shouldRecreateConnection(true)
+            const c = await connection.connect()
+            c.on("close", (err) => { this.logger.debug('[AMQP_CLOSE]', err) })
+            c.on("error", (err) => { this.logger.debug('[AMQP_ERROR]', err) })
+
+            const preparePublisher = async (ch: Channel) => {
+                await ch.assertQueue(iniConf.rabbitQueueOutputName, { durable: false })
+                await ch.assertExchange(iniConf.rabbitExchangeName, "direct")
+                await ch.bindQueue(iniConf.rabbitQueueOutputName, iniConf.rabbitExchangeName, iniConf.rabbitRoutKeyName)
+                this.logger.debug('[AMQP_PUBLISHER_SUCCESS]', iniConf.rabbitQueueOutputName)
+            }
+
+            const publisher = new Publisher(connection, preparePublisher)
+
+            this.logger.debug('[AMQP_CONNECT_SUCCESS]')
+
+            await this.initDatabase()
+
+            const statsConsumer = new StatsController(publisher)
+            const topico = iniConf.kafkaTopicName
+            const ksumer = await this.kafkaInstance.Ksumer(kClient, topico)
+
+            ksumer.on('message', async (message) => {
+                await statsConsumer.proMsg(message.value.toString(), iniConf)
+            })
+            ksumer.on('error', (e: Error) => {
+                this.logger.error('[ON_CONSUMER_KAFKA_ERROR]', e)
+            })
+            ksumer.once('error', (e: Error) => {
+                this.logger.error('[ONCE_CONSUMER_KAFKA_ERROR]', e)
+                if (e.name === 'TopicsNotExistError') {
+                    const topicsToCreate = [{
+                        topic: topico,
+                        partitions: 1,
+                        replicationFactor: 1
+                    }];
+                    kClient.createTopics(topicsToCreate, async (err, result) => {
+                        if (err) throw err
+
+                        await database.close()
+                        await this.amqpInstance.close()
+                        this.startUp(iniConf)
+                    })
+                }
+            })
+            //}).catch(this.logger.error)
         })
         kClient.on('error', (e: Error) => {
             this.logger.error('[KAFKA_CONNECT_ERROR]', e)

@@ -1,6 +1,17 @@
 import * as dotenv from 'dotenv'
 dotenv.config();
 
+/*
+const options = {
+    host: "localhost",
+    port: 5672,
+    user: "guest",
+    pass: "guest",
+    vhost: "/",
+    heartbeat: 60,
+};
+*/
+
 const optionsAmqp = {
     host: (<string>process.env.RABBIT_HOST),
     port: parseInt(<string>process.env.RABBIT_PORT),

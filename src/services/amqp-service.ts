@@ -3,8 +3,8 @@ import { Logger } from 'winston'
 
 export class AmqpService extends Connection {
     constructor(logger: Logger) {
-        //super({ connectionString: 'amqp://localhost' }, logger)
-        super({ connectionString: 'amqps://feadhfit:XMb8d1vGS5_jhrPjm4jlRmW7Te8CnYwr@crane.rmq.cloudamqp.com/feadhfit' }, logger)
+        super({ connectionString: 'amqp://localhost:5672/' }, logger)
+        //super({ connectionString: 'amqps://feadhfit:XMb8d1vGS5_jhrPjm4jlRmW7Te8CnYwr@crane.rmq.cloudamqp.com/feadhfit' }, logger)
     }
 
     public async conn(): Promise<Connection> {
