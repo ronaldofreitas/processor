@@ -17,7 +17,7 @@ const StatsSchema = new Schema(
     sc: { type: String, required: true },
     lt: { type: Number, required: true },
     rt: { type: Number, required: true },
-    dt: { type: String, required: true },
+    dt: { type: String, required: true }
   }
 );
 
