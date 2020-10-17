@@ -10,6 +10,7 @@ export interface configInit {
     rabbitExchangeName: string;
     rabbitExchangeType: string;
     rabbitQueueOutputName: string;
+    rabbitQueueReplyTo: string;
     rabbitRoutKeyName: string;
 }
 
@@ -62,7 +63,14 @@ export class StatsController {
                 this.statsModel.dt = dataProd
                 await this.statsModel.save().then(async () => {
                     const resultProccess = {dt: dataProd, ep: endpoint_p, me: metodo_p, sc: status_p, lt: latencia_p, rt: 1}
-                    await this.publis.sendToQueue(iniConf.rabbitQueueOutputName, Buffer.from(stringify(resultProccess)), {})
+                    //await this.publis.sendToQueue(iniConf.rabbitQueueOutputName, Buffer.from(stringify(resultProccess)), {})
+                    await this.publis.publish(
+                        iniConf.rabbitExchangeName, 
+                        iniConf.rabbitRoutKeyName, 
+                        Buffer.from(stringify(resultProccess)), 
+                        { 
+                            replyTo: iniConf.rabbitQueueReplyTo
+                        })
                 }).catch((e) => {
                     logger.error(e)
                 })

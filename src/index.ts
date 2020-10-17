@@ -6,6 +6,7 @@ const config_init = {
     rabbitExchangeName: 'exchange1',
     rabbitExchangeType: 'direct',
     rabbitQueueOutputName: 'pre-stats',
-    rabbitRoutKeyName: 'routKey'
+    rabbitQueueReplyTo: 'notify',
+    rabbitRoutKeyName: 'routKey',
 }
 app.init(config_init)
