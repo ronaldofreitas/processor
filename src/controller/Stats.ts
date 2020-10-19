@@ -34,7 +34,7 @@ export class StatsController {
     constructor (private publis: Publisher) {
         this.statsModel = new Stats()
     }
-    
+
     async proMsg(dataMessage: string, iniConf: configInit): Promise<void> {
         const dataParse: ProxyMessage = Parser.parse(dataMessage)
         const fulldate = new Date(dataParse.date)
@@ -63,7 +63,8 @@ export class StatsController {
                 this.statsModel.dt = dataProd
                 await this.statsModel.save().then(async () => {
                     const resultProccess = {dt: dataProd, ep: endpoint_p, me: metodo_p, sc: status_p, lt: latencia_p, rt: 1}
-                    //await this.publis.sendToQueue(iniConf.rabbitQueueOutputName, Buffer.from(stringify(resultProccess)), {})
+                    await this.publis.sendToQueue(iniConf.rabbitQueueOutputName, Buffer.from(stringify(resultProccess)), {})
+                    /*
                     await this.publis.publish(
                         iniConf.rabbitExchangeName, 
                         iniConf.rabbitRoutKeyName, 
@@ -71,6 +72,7 @@ export class StatsController {
                         { 
                             replyTo: iniConf.rabbitQueueReplyTo
                         })
+                    */
                 }).catch((e) => {
                     logger.error(e)
                 })
@@ -93,7 +95,15 @@ export class StatsController {
                 if (doc) {
                     const resultProccess = {dt: dataProd, ep: doc.ep, me: doc.me, sc: doc.sc, lt: doc.lt, rt: doc.rt}
                     await this.publis.sendToQueue(iniConf.rabbitQueueOutputName, Buffer.from(stringify(resultProccess)), {})
-                    //await this.publis.publish(iniConf.rabbitExchangeName, iniConf.rabbitRoutKeyName, Buffer.from(stringify(resultProccess)), {});
+                    /*
+                    await this.publis.publish(
+                        iniConf.rabbitExchangeName, 
+                        iniConf.rabbitRoutKeyName, 
+                        Buffer.from(stringify(resultProccess)), 
+                        { 
+                            replyTo: iniConf.rabbitQueueReplyTo
+                        })
+                    */
                 } else {
                     logger.warn('não foi possível findOneAndUpdate', doc)
                 }

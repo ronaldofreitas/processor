@@ -1,5 +1,5 @@
 {
-  "name": "example-typeorm-postgres",
+  "name": "microservice-p2b-processor",
   "version": "1.0.0",
   "main": "dist/index.js",
   "license": "Unlicense",
@@ -23,11 +23,14 @@
     "fast-json-stable-stringify": "^2.1.0",
     "kafka-node": "^5.0.0",
     "mongoose": "^5.10.7",
+    "nodemon": "^2.0.5",
     "winston": "^3.3.3"
   },
   "scripts": {
-    "build": "tsc",
-    "start": "npm run build && node dist/index.js",
-    "test": "jest"
+    "build": "tsc --skipLibCheck",
+    "start": "NODE_ENV=production npm run build && node ./dist/index.js",
+    "start:local": "NODE_ENV=development npm run build && node ./dist/index.js",
+    "dev": "NODE_ENV=development nodemon > dev.log",
+    "test": "NODE_ENV=development mocha -r ts-node/register test/index.js --exit"
   }
 }

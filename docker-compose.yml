@@ -1,31 +1,20 @@
-version: '3'
-
+version: "3.1"
 services:
-  postgres:
-    image: postgres:alpine
-    restart: "always"
-    environment:
-      POSTGRES_PASSWORD: "Postgres2019!"
-      POSTGRES_USER: "processor"
+  api:
+    image: node:12-alpine3.9
+    container_name: processor
+    restart: always
+    env_file:
+     - .env
+    network_mode: bridge
     ports:
-      - "15432:5432"
+      - ${SERVER_PORT}:${SERVER_PORT}
     volumes:
-      - /home/ronaldo/typescript-projects/processor/datapg:/var/lib/postgresql/data 
-    networks:
-      - postgres-compose-network
-      
-  pgadmin:
-    image: dpage/pgadmin4
-    environment:
-      PGADMIN_DEFAULT_EMAIL: "ronafreitasweb@gmail.com"
-      PGADMIN_DEFAULT_PASSWORD: "PgAdmin2019!"
-    ports:
-      - "16543:80"
-    depends_on:
-      - postgres
-    networks:
-      - postgres-compose-network
-
-networks: 
-  postgres-compose-network:
-    driver: bridge
+      - .:/usr/src/app # toda essa pasta da app vai para o '/usr/src/app' no container
+    working_dir: /usr/src/app
+    command: npm run start:local
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "5"
