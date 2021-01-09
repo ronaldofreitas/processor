@@ -6,6 +6,7 @@ import stringify from 'fast-json-stable-stringify'
 import logger from "../util/logger"
 
 export interface configInit {
+    kafkaHost: string;
     kafkaTopicName: string;
     rabbitExchangeName: string;
     rabbitExchangeType: string;
@@ -37,6 +38,7 @@ export class StatsController {
 
     async proMsg(dataMessage: string, iniConf: configInit): Promise<void> {
         const dataParse: ProxyMessage = Parser.parse(dataMessage)
+        //console.log('MENSAGEM', dataParse);
         const fulldate = new Date(dataParse.date)
         const data_mes = fulldate.getMonth().toString()
         let dt_mes = data_mes

@@ -1,4 +1,5 @@
 version: "3.1"
+
 services:
   api:
     image: node:12-alpine3.9
@@ -6,7 +7,7 @@ services:
     restart: always
     env_file:
      - .env
-    network_mode: bridge
+    network_mode: bridge # por conta do tipo de network do kafka/nginx
     ports:
       - ${SERVER_PORT}:${SERVER_PORT}
     volumes:
@@ -18,3 +19,8 @@ services:
       options:
         max-size: "10m"
         max-file: "5"
+
+#networks:
+#  default:
+#    external:
+#      name: p2bnet

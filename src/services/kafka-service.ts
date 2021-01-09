@@ -2,7 +2,7 @@ import { KafkaClient, Consumer, Producer, Offset, OffsetRequest, Topic } from 'k
 
 export class KafkaService {
 
-    public async initClient(): Promise<KafkaClient> {
+    public async initClient(kafkaHost: string): Promise<KafkaClient> {
         const operation = {
             retries: 2,
             //factor: 1,
@@ -11,16 +11,29 @@ export class KafkaService {
             randomize: true,
         };
         return new KafkaClient({
-            kafkaHost: '172.17.0.3:9092', 
+            kafkaHost, 
             autoConnect: true, 
-            connectRetryOptions: operation
+            connectRetryOptions: operation,
+            requestTimeout: 90000
         });
+    }
+
+    public async RefreshMetadata(
+        client: KafkaClient, topic: string[]
+    ): Promise<any> {
+        client.refreshMetadata(topic, (e) => {
+            if (e) {
+                console.log('------- ERROR RefreshMetadata -----------');
+                throw new Error(e)
+            }
+        })
     }
 
     public async Ksumer(
         client: KafkaClient, topic: string
     ): Promise<Consumer> {
-        return new Consumer(client, [ { topic, partition: 0 } ], { autoCommit: true })
+        return new Consumer(client, [ { topic } ], { autoCommit: true })
+        //return new Consumer(client, [ { topic, partition: 1 } ], { autoCommit: true })
     }
 
     public async createTopic(

@@ -1,13 +1,17 @@
 import mongoose, { Mongoose } from 'mongoose';
 
+/*
 const 
   db_name = 'pipe2be',
   db_user = 'processor',
   db_pass = 'ht8caf9UofmSTKNt',
   db_host = 'cluster0.8bvv8.gcp.mongodb.net',
   mongoUri = `mongodb+srv://${db_user}:${db_pass}@${db_host}/${db_name}?retryWrites=true&w=majority`;
+*/
 
-//const mongoUri = 'mongodb://localhost:27017'
+//const mongoUri = 'mongodb://root:rootpassword@172.17.0.5:27017/processor'
+const mongoUri = 'mongodb://root:rootpassword@172.17.0.5:27017/processor?authSource=admin&readPreference=primary&appname=MongoDB%20Compass&ssl=false'
+
 export const connect = async (): Promise<Mongoose> =>
   await mongoose.connect(mongoUri, {
     useCreateIndex: true,

@@ -5,6 +5,7 @@ import { AmqpService } from './services/amqp-service'
 import { Publisher } from 'amqplib-plus'
 import { Channel } from 'amqplib'
 import logger from "./util/logger"
+const KafkaAdmin = require("kafka-node").Admin;
 
 export class Application {
     private kafkaInstance: KafkaService
@@ -19,7 +20,8 @@ export class Application {
             logger.debug('[DATABASE_CONNECT_SUCCESS]')
         } catch (error) {
             logger.error('[DATABASE_CONNECT_ERROR]')
-            throw new Error('Database not connected')
+            throw new Error(error)
+            //throw new Error('Database not connected')
         }
     }
 
@@ -30,9 +32,14 @@ export class Application {
     private async startUp(iniConf: configInit): Promise<void> {
 
         await this.initKafka()
-        const kClient = await this.kafkaInstance.initClient()
+        const kClient = await this.kafkaInstance.initClient(iniConf.kafkaHost)
+        const admin = new KafkaAdmin(kClient)
         kClient.on('ready', async () => {
 
+            admin.listTopics((err: any, res: any) => {
+                console.log('topics');
+                console.log(res[1].metadata)
+            });
             logger.info('[KAFKA_CONNECT_SUCCESS]')
             
             const amqpService = new AmqpService(logger)
@@ -69,6 +76,10 @@ export class Application {
                 })
                 ksumer.once('error', (e: Error) => {
                     logger.error('[ONCE_CONSUMER_KAFKA_ERROR]', e)
+                    console.log(e)
+                    console.log('-----------------------------')
+                    console.log(e.name)
+                    console.log('-----------------------------')
                     if (e.name === 'TopicsNotExistError') {
                         const topicsToCreate = [{
                             topic: topico,
@@ -77,14 +88,16 @@ export class Application {
                         }];
                         kClient.createTopics(topicsToCreate, async (err, result) => {
                             if (err) {
-                                logger.error(err)
+                                logger.error('[ONCE_CONSUMER_CREATE_TOPIC_ERROR]',err)
                                 throw err
                             }
-
+                            logger.info('[KAFKA_TOPIC_CREATED]', result)
                             //await database.close()
                             //await this.amqpInstance.close()
                             this.startUp(iniConf)
                         })
+                    } else if (e.name === 'BrokerNotAvailableError') {
+                        this.startUp(iniConf)
                     }
                 })
             }).catch(logger.error)
